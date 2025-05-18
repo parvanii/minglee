@@ -24,6 +24,18 @@ const userSchema= new mongoose.Schema({
         type:String,
         default:"",
     },
+    fluentIn: {
+        type: String,
+        default: "",
+      },
+      currLearning: {
+        type: String,
+        default: "",
+      },
+      location: {
+        type: String,
+        default: "",
+      },
     isSetupComplete:{
         type:Boolean,
         default:false
@@ -33,8 +45,8 @@ const userSchema= new mongoose.Schema({
         type:mongoose.Schema.Types.ObjectId,
         ref:"User",
     }
-    ]
-
+    ],
+    
 },
 {timestamps:true});
 //pre hook
