@@ -30,13 +30,16 @@ export async function signup(req,res){
   //generating avatar
   const index= Math.floor(Math.random()*100)+1;
   const randAvatar= `https://avatar.iran.liara.run/public/${index}.png`;
-   
+ 
+
   const newUser= await User.create({
     fullName,
     email,
     password,
-    profilePic:randAvatar,
-   })
+    profilePic:randAvatar
+   }) ;
+  
+   
 
    // creating user in stream as well
    try{
@@ -46,7 +49,9 @@ export async function signup(req,res){
     image:newUser.profilePic||"",
    });
    console.log(`stream user created for${newUser.fullName}`);
-}
+   
+} 
+
 
 catch(error){
     console.log("error creating Stream user",error)

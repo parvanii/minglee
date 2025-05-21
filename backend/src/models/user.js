@@ -45,10 +45,10 @@ const userSchema= new mongoose.Schema({
         type:mongoose.Schema.Types.ObjectId,
         ref:"User",
     }
-    ],
-    
+    ]
 },
 {timestamps:true});
+
 //pre hook
 userSchema.pre("save",async function(next){
     if(!this.isModified("password")){
