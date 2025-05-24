@@ -7,19 +7,37 @@ import CallPage from "./pages/CallPage.jsx";
 import ChatPage from "./pages/ChatPage.jsx";
 import SetupPage from "./pages/SetupPage.jsx";
 import {Toaster, toast } from "react-hot-toast";
+import axios from 'axios';
+import { useQuery } from '@tanstack/react-query';
+import { axiosInstance } from "./lib/axios.js";
+import { Navigate } from "react-router";
+
 const App=()=> {
+
+  const {data:authData,isLoading,error}=useQuery({
+     queryKey:["authUser"], 
+     
+     queryFn:async()=>{
+     const res= await axiosInstance.get("/api/me")
+     return res.data;
+  },
+  retry:false,
+}); 
+
+const authUser=authData?.user
+
   return <div className="h-screen text-5xl" data-theme= "valentine">
-    <button onClick={()=>toast.success("hello world")}> create toast notification</button>
+
   <Routes>
-    <Route path="/" element={<HomePage/>}/>
-    <Route path="/signup" element={<SignUpPage/>}/>
-    <Route path="/login" element={<LoginPage />}/>
-    <Route path="/notifications" element={<NotificationsPage />}/>
-    <Route path="/call" element={<CallPage/>}/>
-    <Route path="/chat" element={<ChatPage />}/>
-    <Route path="/setup" element={<SetupPage />}/>
+    <Route path="/" element={authUser?<HomePage/>:<Navigate to= "/login" />}/>
+    <Route path="/signup" element={!authUser ?<SignUpPage/>:<Navigate to= "/"/>}/>
+    <Route path="/login" element={!authUser ?<LoginPage />:<Navigate to= "/"/>}/>
+    <Route path="/notifications" element={authUser ?<NotificationsPage />:<Navigate to= "/login"/>}/>
+    <Route path="/call" element={authUser ?<CallPage/>:<Navigate to= "/login"/>}/>
+    <Route path="/chat" element={authUser ?<ChatPage />:<Navigate to= "/login"/>}/>
+    <Route path="/setup" element={authUser ?<SetupPage />:<Navigate to= "/login"/>}/>
   </Routes>
-  <Toaster/>
+  
     </div>;
   
 };
