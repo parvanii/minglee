@@ -1,6 +1,7 @@
-import React from 'react';
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
+import { useQueryClient, useMutation } from "@tanstack/react-query";
+import { axiosInstance } from "../lib/axios";
 
 const SignUpPage = () => {
   const [signUpData, setSignupData] = useState({
@@ -9,11 +10,37 @@ const SignUpPage = () => {
     password: "",
     confirmPassword: ""
   });
+  const [passwordError, setPasswordError] = useState("");
+
+  const queryClient = useQueryClient();
+
+  const { mutate, isPending, error, reset } = useMutation({
+    mutationFn: async () => {
+      const { fullName, email, password } = signUpData;
+      const response = await axiosInstance.post("/auth/signup", {
+        fullName,
+        email,
+        password
+      });
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["authUser"] });
+    },
+    onError: (err) => {
+      console.error("SIGNUP ERROR:", err?.response?.data || err.message);
+    }
+  });
+  
 
   const handleSignup = (e) => {
     e.preventDefault();
-    // Handle sign-up logic here
-    console.log(signUpData);
+    if (signUpData.password !== signUpData.confirmPassword) {
+      setPasswordError("Passwords do not match");
+      return;
+    }
+    setPasswordError(""); // clear error before sending
+    mutate();
   };
 
   return (
@@ -41,6 +68,7 @@ const SignUpPage = () => {
               className="w-[371.33px] h-[48px] px-4 rounded-[8px] bg-[#f3f4f6] text-sm text-gray-700 placeholder-gray-400 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#925FF0]"
               value={signUpData.fullName}
               onChange={(e) => setSignupData({ ...signUpData, fullName: e.target.value })}
+              required
             />
           </div>
 
@@ -52,6 +80,7 @@ const SignUpPage = () => {
               className="w-[371.33px] h-[48px] px-4 rounded-[8px] bg-[#f3f4f6] text-sm text-gray-700 placeholder-gray-400 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#925FF0]"
               value={signUpData.email}
               onChange={(e) => setSignupData({ ...signUpData, email: e.target.value })}
+              required
             />
           </div>
 
@@ -63,6 +92,7 @@ const SignUpPage = () => {
               className="w-[371.33px] h-[48px] px-4 rounded-[8px] bg-[#f3f4f6] text-sm text-gray-700 placeholder-gray-400 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#925FF0]"
               value={signUpData.password}
               onChange={(e) => setSignupData({ ...signUpData, password: e.target.value })}
+              required
             />
           </div>
 
@@ -74,7 +104,11 @@ const SignUpPage = () => {
               className="w-[371.33px] h-[48px] px-4 rounded-[8px] bg-[#f3f4f6] text-sm text-gray-700 placeholder-gray-400 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#925FF0]"
               value={signUpData.confirmPassword}
               onChange={(e) => setSignupData({ ...signUpData, confirmPassword: e.target.value })}
+              required
             />
+            {passwordError && (
+              <p className="text-red-500 text-sm mt-1">{passwordError}</p>
+            )}
           </div>
 
           <div className="pt-4">
@@ -84,8 +118,14 @@ const SignUpPage = () => {
               whileHover={{ scale: 1.03 }}
               whileTap={{ scale: 0.98 }}
             >
-              Create Account
+              {isPending ? "Signing up..." : "Sign Up"}
             </motion.button>
+            {error && (
+  <p className="text-red-500 text-sm mt-2">
+    {error?.response?.data?.message || "Signup failed. Please try again."}
+  </p>
+)}
+
           </div>
         </form>
 
