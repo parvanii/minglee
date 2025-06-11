@@ -6,13 +6,14 @@ try {
     const currUserId =req.user._id;
     const currUser=req.user
 
-    const Recs=  await User.find({
-        $and:[
-            {_id: {$ne: currUserId}},//excluding current user
-            {_id: { $nin: currUser.friends }}, //exclude current user's friends
-            {isSetupComplete:true}
+    const Recs = await User.find({
+        $and: [
+          { _id: { $ne: currUserId } },
+          { _id: { $nin: currUser.friends } },
+          { isSetupComplete: true }
         ]
-    })
+      });
+      
     res.status(200).json(Recs);
 
 } catch (error) {
@@ -25,7 +26,7 @@ export async function myFriends(req,res){
 try {
     const user= await User.findById(req.user.id)
     .select("friends")
-    .populate("friends","fullName, profilePic, fluentIn,currLearning");
+    .populate("friends","fullName  profilePic fluentIn currLearning");
     res.status(200).json(user.friends)
 } catch (error) {
     console.error("error in myFriends controller",error.message);
@@ -86,7 +87,7 @@ export async function acceptfriendRequest(req,res){
     try {
         const {id:requestId}=req.params;
 
-        const friendRequest=FriendRequest.findById(requestId);
+        const friendRequest= await FriendRequest.findById(requestId);
 
         if(!friendRequest)
             {
@@ -94,7 +95,7 @@ export async function acceptfriendRequest(req,res){
             }
         //verify is current user is recepient
         if(friendRequest.recipient.toString()!=req.user._id){
-            return res.staus(403).json({message:"You're not authorized to accept this requests"})
+            return res.status(403).json({message:"You're not authorized to accept this requests"})
         }
 
         friendRequest.status="accepted";
@@ -110,11 +111,11 @@ export async function acceptfriendRequest(req,res){
             $addToSet:{friends:friendRequest.sender}
         });
 
-        res.staus(200).json({message:"friend request accepted"})
+        res.status(200).json({message:"friend request accepted"})
 
     } catch (error) {
         console.log("error in acceptFriendRequest controller",error.message);
-        res.staus(500).json({message:"Internal server error"});
+        res.status(500).json({message:"Internal server error"});
     }
 }
 
@@ -123,12 +124,12 @@ export async function getFriendReqs(req,res){
        const incomingReqs= await FriendRequest.find({
         recipient:req.user._id,
         status:"pending",
-       }).populate ("sender","fullName,profilePic,currLearning, fluentIn");
+       }).populate ("sender","fullName profilePic currLearning fluentIn");
 
        const acceptedReqs=await FriendRequest.find({
         sender:req.user._id,
         status:"accepted",
-       }).populate ("recipient","fullName,profilePic");
+       }).populate ("recipient","fullName profilePic");
        
        res.status(200).json({incomingReqs,acceptedReqs});
     } catch (error) {
@@ -143,7 +144,7 @@ export async function getOutgoingFriendReqs(req,res){
     const outgoingRequests= await FriendRequest.find({
         sender:req.user._id,
         status:"pending",
- }).populate("recipient","fullName,profilePic,currLearning, fluentIn");
+ }).populate("recipient","fullName profilePic currLearning fluentIn");
  res.status(200).json({outgoingRequests});
 
   } catch (error) {
