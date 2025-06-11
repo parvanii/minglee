@@ -1,4 +1,4 @@
-import { Route, Routes } from "react-router";
+import { Route, Routes, Navigate } from "react-router-dom";
 import LoginPage from "./pages/LoginPage.jsx";
 import HomePage from "./pages/HomePage.jsx";
 import SignUpPage from "./pages/SignUpPage.jsx";
@@ -6,39 +6,89 @@ import NotificationsPage from "./pages/NotificationsPage.jsx";
 import CallPage from "./pages/CallPage.jsx";
 import ChatPage from "./pages/ChatPage.jsx";
 import SetupPage from "./pages/SetupPage.jsx";
-import {Toaster, toast } from "react-hot-toast";
-import axios from 'axios';
-import { useQuery } from '@tanstack/react-query';
-import { axiosInstance } from "./lib/axios.js";
-import { Navigate } from "react-router";
+import FriendsPage from "./pages/FriendsPage.jsx";
+import PageLoader from "./components/PageLoader.jsx";
+import Layout from "./components/Layout.jsx";
+import { Toaster } from "react-hot-toast";
+import useAuthUser from "./hooks/useAuthUser.js";
 
-const App=()=> {
 
-  const {data:authData,isLoading,error}=useQuery({
-     queryKey:["authUser"], 
-     
-     queryFn:async()=>{
-     const res= await axiosInstance.get("/api/me")
-     return res.data;
-  },
-  retry:false,
-}); 
 
-const authUser=authData?.user
+const App = () => {
+  const { isLoading, authUser} = useAuthUser();
 
-  return <div className="h-screen text-5xl" data-theme= "valentine">
+  const isAuth = Boolean(authUser);
+  const isOnboarded = authUser?.isSetupComplete;
 
-  <Routes>
-    <Route path="/" element={authUser?<HomePage/>:<Navigate to= "/login" />}/>
-    <Route path="/signup" element={!authUser ?<SignUpPage/>:<Navigate to= "/"/>}/>
-    <Route path="/login" element={!authUser ?<LoginPage />:<Navigate to= "/"/>}/>
-    <Route path="/notifications" element={authUser ?<NotificationsPage />:<Navigate to= "/login"/>}/>
-    <Route path="/call" element={authUser ?<CallPage/>:<Navigate to= "/login"/>}/>
-    <Route path="/chat" element={authUser ?<ChatPage />:<Navigate to= "/login"/>}/>
-    <Route path="/setup" element={authUser ?<SetupPage />:<Navigate to= "/login"/>}/>
-  </Routes>
+  if (isLoading) return <PageLoader />;
+
+  return (
+    <div className="h-screen">
+ 
+        <Routes>
+          {/* Auth routes */}
+          <Route
+            path="/login"
+            element={
+              !isAuth ? <LoginPage /> : <Navigate to={isOnboarded ? "/" : "/setup"} />
+            }
+          />
+          <Route
+            path="/signup"
+            element={
+              !isAuth ? <SignUpPage /> : <Navigate to={isOnboarded ? "/" : "/setup"} />
+            }
+          />
+          <Route
+            path="/setup"
+            element={isAuth ? <SetupPage /> : <Navigate to="/login" />}
+          />
   
-    </div>;
+          {/* Protected routes */}
+          {isAuth && isOnboarded && (
+            <Route element={<Layout showSidebar={true} />}>
+              <Route path="/" element={<HomePage />} />
+              <Route path="/notifications" element={<NotificationsPage />} />
+              <Route path="/friends" element={<FriendsPage />} />
+            </Route>
+          )}
+  
+          {/* Chat route */}
+          <Route
+            path="/chat/:id"
+            element={
+              !isAuth ? (
+                <Navigate to="/login" />
+              ) : !isOnboarded ? (
+                <Navigate to="/setup" />
+              ) : (
+                <Layout showSidebar={false}>
+                  <ChatPage />
+                </Layout>
+              )
+            }
+          />
+  
+          {/* Call route */}
+          <Route
+            path="/call/:id"
+            element={
+              isAuth && isOnboarded ? (
+                <CallPage />
+              ) : (
+                <Navigate to={!isAuth ? "/login" : "/setup"} />
+              )
+            }
+          />
+  
+          {/* Fallback */}
+          <Route path="*" element={<Navigate to={isAuth ? "/" : "/login"} />} />
+        </Routes>
+  
+        <Toaster />
+     
+    </div>
+  );
   
 };
 
