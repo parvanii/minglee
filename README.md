@@ -1,6 +1,3 @@
-Here’s an updated and polished **README description** for **Minglee**, with everything you've asked for:
-
----
 
 ## 🌍 Minglee — Connect Through Languages
 
@@ -128,6 +125,6 @@ npm run dev
 ## 🚀 Live Demo
 
 🔗 **Deployed Site**: [https://minglee.onrender.com](https://minglee.onrender.com)
-📦 **GitLab Repo**: [https://gitlab.com/parvanayy-group/minglee](https://gitlab.com/parvanayy-group/minglee)
+
 
 
